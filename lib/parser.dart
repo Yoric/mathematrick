@@ -57,10 +57,7 @@ class Parser {
   }
 
   void nary(double Function(List<dynamic> values) op) {
-    var arity = stack[0].round();
-    if (arity != stack[0]) {
-      throw ('Not an integer');
-    }
+    var arity = stack[0] as int;
     var values = [];
     for (var i = 1; i <= arity; ++i) {
       values.add(stack[i]);
@@ -86,10 +83,18 @@ class Parser {
         // Some numbers are unfortunately recognized as non-numbers, try and patch them here.
         switch (word) {
           case "un":
+          case "hein":
             asNumber = 1;
             break;
           case "de":
             asNumber = 2;
+            break;
+          case "cet":
+          case "cette":
+            asNumber = 7;
+            break;
+          case "neuf":
+            asNumber = 9;
             break;
           default:
             break;
@@ -149,9 +154,12 @@ class Parser {
         // Separators
         case "égal":
         case "=":
+        case "entrer":
         case "entrée":
         case "entrés":
         case "entrées":
+        case "espace":
+        case "espaces":
           break;
         case "addition":
         case "plus":
@@ -189,15 +197,36 @@ class Parser {
         default:
           throw ('Unknown word $word');
       }
-      print("Parser: Found symbol $asSymbol");
-      tokens.add(Symbol(asSymbol));
+      if (asSymbol != null) {
+        print("Parser: Found symbol $asSymbol");
+        tokens.add(Symbol(asSymbol));
+      } else {
+        print("Parser: skipping $word");
+      }
     }
     print("Parser: tokenized $tokens");
     return tokens;
   }
 
-  void handleWords(Iterable<String> words) {
-    var tokens = tokenize(words);
+  void handleWords(Iterable<String> words, {void Function(List<String>) onStatus}) {
+    if (onStatus == null) {
+      onStatus = (_) {};
+    }
+    var tokens;
+    try {
+      tokens = tokenize(words);
+    } catch (ex) {
+      onStatus(["Je ne comprends pas: ", "$ex"]);
+      throw ex;
+    }
+    {
+      List<String> status = [];
+      for (var token in tokens) {
+        status.add("$token");
+      }
+      print("Sending back status $status");
+      onStatus(status);
+    }
 
     // FIXME: Handle Undo.
 

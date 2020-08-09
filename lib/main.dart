@@ -102,7 +102,12 @@ class _StackPageState extends State<StackPage> {
           setState(() {
             _status = "$words";
           });
-          parser.handleWords(words);
+          parser.handleWords(words, onStatus: (status) {
+            print("Got status!");
+            setState(() {
+              _status = "$status";
+            });
+          });
         });
   }
 

@@ -47,4 +47,11 @@ void main() {
     parser.handleWords(["1", "2", "3.0", "4", "3", "moyenne"]);
     expect(parser.stack, equals([(2.0 + 3.0 + 4.0) / 3.0, 1.0]));
   });
+
+  test('Random stuff I\'ve encountered while testing', () {
+    Parser parser = new Parser();
+    parser.handleWords(["5", "espace", "cet", "espace", "moins"]);
+    expect(parser.stack.length, 1);
+    almost(parser.stack[0], -2.0, 0.01);
+  });
 }

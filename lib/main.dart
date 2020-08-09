@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl_standalone.dart';
+import 'package:intl/intl.dart';
 
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -58,6 +59,7 @@ class _StackPageState extends State<StackPage> {
   final int itemCount;
   final TextStyle textStyle = new TextStyle(fontSize: 32);
   Parser parser;
+  NumberFormat _numberFormat;
 
   // `true` if we couldn't initialize.
   bool _hasSpeechError = false;
@@ -67,9 +69,10 @@ class _StackPageState extends State<StackPage> {
   @override
   void initState() {
     super.initState();
-    assert(parser.stack.length >= 0);
-    assert(itemCount >= 0);
-    findSystemLocale().then((locale) { parser = Parser(locale); });
+    findSystemLocale().then((locale) {
+      parser = Parser(locale);
+      _numberFormat = NumberFormat();
+    });
   }
 
   final SpeechToText _speech = SpeechToText();
@@ -136,7 +139,7 @@ class _StackPageState extends State<StackPage> {
             );
           }
           return Text(
-            "$index => ${parser.stack[index]}",
+            "$index => ${_numberFormat.format(parser.stack[index])}",
             style: textStyle,
           );
         },

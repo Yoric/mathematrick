@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl_standalone.dart';
 
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -56,7 +57,7 @@ class _StackPageState extends State<StackPage> {
 
   final int itemCount;
   final TextStyle textStyle = new TextStyle(fontSize: 32);
-  final Parser parser = Parser();
+  Parser parser;
 
   // `true` if we couldn't initialize.
   bool _hasSpeechError = false;
@@ -65,10 +66,10 @@ class _StackPageState extends State<StackPage> {
 
   @override
   void initState() {
-    print("itemCount: $itemCount");
+    super.initState();
     assert(parser.stack.length >= 0);
     assert(itemCount >= 0);
-    super.initState();
+    findSystemLocale().then((locale) { parser = Parser(locale); });
   }
 
   final SpeechToText _speech = SpeechToText();

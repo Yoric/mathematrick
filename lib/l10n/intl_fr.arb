@@ -1,0 +1,13 @@
+{
+  "@@last_modified": "2020-08-09T22:31:01.762469",
+  "ready": "Prêt",
+  "@ready": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "avg": "Moyenne",
+  "@avg": {
+    "type": "text",
+    "placeholders": {}
+  }
+}

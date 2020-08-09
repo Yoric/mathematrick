@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import 'package:mathematrick/localized.dart';
+
 class Token {
   String toString() {
     throw ("Not implemented");
@@ -275,7 +277,7 @@ class Parser {
     {
       List<String> status = [];
       for (var token in tokens) {
-        status.add('"$token"');
+        status.add('$token');
       }
       print("Sending back status $status");
       onStatus(status);

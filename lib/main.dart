@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl_standalone.dart';
 import 'package:intl/intl.dart';
+import 'package:mathematrick/localized.dart';
 
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -65,13 +66,20 @@ class _StackPageState extends State<StackPage> {
   bool _hasSpeechError = false;
   bool _isListening = false;
   String _status;
+  AppLocalizations _localizations;
 
   @override
   void initState() {
     super.initState();
-    findSystemLocale().then((locale) {
+    findSystemLocale().then((locale) async {
+      print("StackPage: locale is $locale ");
       parser = Parser(locale);
       _numberFormat = NumberFormat();
+      _localizations = await AppLocalizations.load(Locale(locale));
+      setState(() {
+        print("Ready: ${_localizations.ready}");
+        _status = _localizations.ready;
+      });
     });
   }
 

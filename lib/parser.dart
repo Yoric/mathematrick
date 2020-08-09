@@ -128,17 +128,17 @@ class Parser {
         switch (word) {
           case "un":
           case "hein":
-            asNumber = 1;
+            asNumber = 1.0;
             break;
           case "de":
-            asNumber = 2;
+            asNumber = 2.0;
             break;
           case "cet":
           case "cette":
-            asNumber = 7;
+            asNumber = 7.0;
             break;
           case "neuf":
-            asNumber = 9;
+            asNumber = 9.0;
             break;
           default:
             break;

@@ -11,14 +11,14 @@ void almost(a, b, max) {
 }
 
 void main() {
-  test('Parser.handleWords can push numbers to the stack', () {
+  test('Push numbers', () {
     Parser parser = new Parser();
     parser.handleWords(["1", "2", "3.0", "4"]);
     expect(parser.stack, equals([4.0, 3.0, 2.0, 1.0]));
   });
 
 
-  test('Parser.handleWords addition performs as expected', () {
+  test('Addition', () {
     Parser parser = new Parser();
     parser.handleWords(["1", "2", "3.0", "4", "plus"]);
     expect(parser.stack, equals([7.0, 2.0, 1.0]));
@@ -27,7 +27,7 @@ void main() {
     almost(parser.stack[0], 10.0, 0.001);
   });
 
-  test('Parser.handleWords subtraction performs as expected', () {
+  test('Subtraction', () {
     Parser parser = new Parser();
     parser.handleWords(["1", "2", "3.0", "4", "moins"]);
     expect(parser.stack, equals([-1.0, 2.0, 1.0]));
@@ -36,16 +36,26 @@ void main() {
     almost(parser.stack[0], -2.0, 0.001);
   });
 
-  test('Parser.handleWords division performs as expected', () {
+  test('Division', () {
     Parser parser = new Parser();
     parser.handleWords(["1", "2", "3.0", "4", "division"]);
     expect(parser.stack, equals([3.0/4.0, 2.0, 1.0]));
   });
 
-  test('Parser.handleWords moyenne performs as expected', () {
+  test('Average', () {
     Parser parser = new Parser();
     parser.handleWords(["1", "2", "3.0", "4", "3", "moyenne"]);
     expect(parser.stack, equals([(2.0 + 3.0 + 4.0) / 3.0, 1.0]));
+  });
+
+  test('Cancel', () {
+    Parser parser = new Parser();
+    parser.handleWords(["1", "2", "3", "4", "5"]);
+    expect(parser.stack, equals([5.0, 4.0, 3.0, 2.0, 1.0]));
+    parser.handleWords(["5", "moyenne"]);
+    expect(parser.stack, equals([3.0]));
+    parser.handleWords(["zut"]);
+    expect(parser.stack, equals([5.0, 4.0, 3.0, 2.0, 1.0]));
   });
 
   test('cet', () {

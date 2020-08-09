@@ -50,6 +50,7 @@ class Symbol extends Token {
 }
 
 class Parser {
+  List<List<double>> backups = [];
   List<double> stack = [];
   void flush() {}
 
@@ -178,6 +179,7 @@ class Parser {
           asSymbol = Symbols.OPP;
           break;
         // Separators
+        case "par":
         case "égal":
         case "=":
         case "entrer":
@@ -197,6 +199,7 @@ class Parser {
         case "multiplier":
         case "fois":
         case "*":
+        case "x":
           asSymbol = Symbols.MUL;
           break;
         case "soustraction":
@@ -218,6 +221,8 @@ class Parser {
           asSymbol = Symbols.DEL;
           break;
         case "zut":
+        case "annule":
+        case "annuler":
           asSymbol = Symbols.CANCEL;
           break;
         default:
@@ -254,54 +259,65 @@ class Parser {
       onStatus(status);
     }
 
-    // FIXME: Handle Undo.
+    // Register undo.
+    backups.add(stack.toList());
 
-    for (var token in tokens) {
-      if (token is Number) {
-        stack.insert(0, token.value);
-        continue;
-      } else if (token is Symbol) {
-        switch (token.value) {
-          case Symbols.ADD:
-            binary((a, b) {
-              return a + b;
-            });
-            break;
-          case Symbols.MUL:
-            binary((a, b) {
-              return a * b;
-            });
-            break;
-          case Symbols.DIV:
-            binary((a, b) {
-              return a / b;
-            });
-            break;
-          case Symbols.SUB:
-            binary((a, b) {
-              return a - b;
-            });
-            break;
-          case Symbols.OPP:
-            unary((a) {
-              return -a;
-            });
-            break;
-          case Symbols.DEL:
-            stack.removeAt(0);
-            break;
-          case Symbols.AVG:
-            nary((values) {
-              return values.fold(0, (acc, element) => acc + element) /
-                  values.length;
-            });
-            break;
-          case Symbols.CANCEL:
-          case Symbols.DOT:
-          case Symbols.NEG:
-            throw ("Not implemented");
+    try {
+      for (var token in tokens) {
+        if (token is Number) {
+          stack.insert(0, token.value);
+          continue;
+        } else if (token is Symbol) {
+          switch (token.value) {
+            case Symbols.ADD:
+              binary((a, b) {
+                return a + b;
+              });
+              break;
+            case Symbols.MUL:
+              binary((a, b) {
+                return a * b;
+              });
+              break;
+            case Symbols.DIV:
+              binary((a, b) {
+                return a / b;
+              });
+              break;
+            case Symbols.SUB:
+              binary((a, b) {
+                return a - b;
+              });
+              break;
+            case Symbols.OPP:
+              unary((a) {
+                return -a;
+              });
+              break;
+            case Symbols.DEL:
+              stack.removeAt(0);
+              break;
+            case Symbols.AVG:
+              nary((values) {
+                return values.fold(0, (acc, element) => acc + element) /
+                    values.length;
+              });
+              break;
+            case Symbols.CANCEL:
+              print("Canceling, here are my backups: $backups");
+              stack = backups[backups.length - 2];
+              backups.removeRange(backups.length - 2, backups.length);
+              print("My new stack is $stack");
+              break;
+            case Symbols.DOT:
+            case Symbols.NEG:
+              throw ("Not implemented");
+          }
         }
       }
+    } catch (ex) {
+      stack = backups.removeLast();
+      throw ex;
     }
   }
 

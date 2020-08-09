@@ -113,17 +113,8 @@ class _StackPageState extends State<StackPage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      body:
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
-          ListView.separated(
+      body: ListView.separated(
         reverse: true,
         itemCount: 128, // FIXME: This should be an argument.
         itemBuilder: (_ctx, index) {
@@ -152,7 +143,11 @@ class _StackPageState extends State<StackPage> {
               ? const Icon(Icons.settings_voice)
               : const Icon(Icons.mic),
           onPressed: onMic),
-          bottomSheet: Text(_status),
+      // Abusing the bottom bar to provide feedback on voice recognition.
+      bottomNavigationBar: BottomAppBar(child: Text(_status,
+        textAlign: TextAlign.center,
+        style: textStyle,
+      )),
     );
   }
 }

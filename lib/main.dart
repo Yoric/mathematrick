@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:speech_to_text/speech_to_text.dart';
 
@@ -12,7 +13,7 @@ class Root extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Mathematrick',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -30,6 +31,15 @@ class Root extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: StackPage(itemCount: 1024),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('fr', ''),
+        const Locale('en', ''),
+      ],
     );
   }
 }
@@ -51,14 +61,13 @@ class _StackPageState extends State<StackPage> {
   // `true` if we couldn't initialize.
   bool _hasSpeechError = false;
   bool _isListening = false;
-  String _status = "(prêt)";
+  String _status;
 
   @override
   void initState() {
     print("itemCount: $itemCount");
     assert(parser.stack.length >= 0);
     assert(itemCount >= 0);
-    assert(_status == "(prêt)");
     super.initState();
   }
 
@@ -144,7 +153,9 @@ class _StackPageState extends State<StackPage> {
               : const Icon(Icons.mic),
           onPressed: onMic),
       // Abusing the bottom bar to provide feedback on voice recognition.
-      bottomNavigationBar: BottomAppBar(child: Text(_status,
+      bottomNavigationBar: BottomAppBar(
+          child: Text(
+        _status ?? "",
         textAlign: TextAlign.center,
         style: textStyle,
       )),

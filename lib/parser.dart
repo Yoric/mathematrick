@@ -1,6 +1,9 @@
+import 'package:intl/intl.dart';
+import 'package:intl/intl_standalone.dart';
+
 class Token {
   String toString() {
-    throw("Not implemented");
+    throw ("Not implemented");
   }
 }
 
@@ -34,16 +37,26 @@ class Symbol extends Token {
   @override
   String toString() {
     switch (value) {
-      case Symbols.DOT: return ",";
-      case Symbols.MUL: return "*";
-      case Symbols.ADD: return "+";
-      case Symbols.SUB: return "-";
-      case Symbols.DIV: return "/";
-      case Symbols.AVG: return "moyenne";
-      case Symbols.NEG: return "négatif";
-      case Symbols.DEL: return "supprimer";
-      case Symbols.OPP: return "opposé";
-      case Symbols.CANCEL: return "annuler";
+      case Symbols.DOT:
+        return ",";
+      case Symbols.MUL:
+        return "*";
+      case Symbols.ADD:
+        return "+";
+      case Symbols.SUB:
+        return "-";
+      case Symbols.DIV:
+        return "/";
+      case Symbols.AVG:
+        return "moyenne";
+      case Symbols.NEG:
+        return "négatif";
+      case Symbols.DEL:
+        return "supprimer";
+      case Symbols.OPP:
+        return "opposé";
+      case Symbols.CANCEL:
+        return "annuler";
     }
     return "?";
   }
@@ -52,6 +65,7 @@ class Symbol extends Token {
 class Parser {
   List<List<double>> backups = [];
   List<double> stack = [];
+
   void flush() {}
 
   void binary(double Function(double, double) op) {
@@ -74,7 +88,7 @@ class Parser {
     var ceil = stack[0].ceil();
     var floor = stack[0].floor();
     if (ceil != floor) {
-      throw("${stack[0]} n'est pas un entier");
+      throw ("${stack[0]} n'est pas un entier");
     }
     var arity = ceil;
     var values = [];
@@ -88,164 +102,171 @@ class Parser {
     stack.removeRange(0, arity);
   }
 
-  List<Token> tokenize(Iterable<String> words) {
-    List<Token> tokens = [];
+  Future<List<Token>> tokenize(Iterable<String> words) async {
+    var locale = await findSystemLocale();
+    print("Tokenizing with locale $locale");
+    return Intl.withLocale(locale, () {
+      NumberFormat numberFormat = NumberFormat(); // FIXME: We chould initialize this only once.
+      List<Token> tokens = [];
 
-    // Tokenize
-    for (var word in words) {
-      print("Parser: Tokenizing $word");
-      word = word.toLowerCase();
+      // Tokenize
+      for (var word in words) {
+        print("Parser: Tokenizing $word");
+        word = word.toLowerCase();
 
-      // Attempt to detect numbers.
-      var asNumber = double.tryParse(word);
-      if (asNumber == null && word.contains(",")) {
-        print('Word "$word" could actually have an odd comma');
-        asNumber = double.tryParse(word.replaceFirst(",", "."));
-      }
-      if (asNumber == null) {
-        // Some numbers are unfortunately recognized as non-numbers, try and patch them here.
-        switch (word) {
-          case "un":
-          case "hein":
-            asNumber = 1;
-            break;
-          case "de":
-            asNumber = 2;
-            break;
-          case "cet":
-          case "cette":
-            asNumber = 7;
-            break;
-          case "neuf":
-            asNumber = 9;
-            break;
-          default:
-            break;
+        // Attempt to detect numbers.
+        var asNumber;
+        try {
+          asNumber = numberFormat.parse(word);
+        } catch (_) {
+          // Obviously, it's not a number.
         }
-      }
-      if (asNumber == null) {
-        // Speech recognition sometimes inserts a comma, trying to make this a list.
-
-      }
-
-      // Attempt to fix numbers
-      if (asNumber != null) {
-        print("Parser: Found number $asNumber");
-        if (tokens.length > 1) {
-          var previous = tokens[tokens.length - 1];
-          if (previous is Symbol) {
-            // Recover "1 point 2" => 1.2
-            if (previous.value == Symbols.DOT) {
-              var beforeSeparator = tokens[tokens.length - 2];
-              print(
-                  "Parser: Attempting to merge $beforeSeparator and $asNumber");
-              if (beforeSeparator is Number) {
-                var value =
-                    Number(double.parse('${beforeSeparator.value}$asNumber'));
-                tokens.removeAt(tokens.length - 2);
-                tokens.add(value);
-                continue;
-              } else {
-                throw ("$beforeSeparator n'est pas un nombre");
-              }
-            } else if (previous.value == Symbols.NEG) {
-              tokens.removeAt(tokens.length - 1);
-              tokens.add(Number(-asNumber));
-              continue;
-            }
+        if (asNumber == null) {
+          // Some numbers are unfortunately recognized as non-numbers, try and patch them here.
+          switch (word) {
+            case "un":
+            case "hein":
+              asNumber = 1;
+              break;
+            case "de":
+              asNumber = 2;
+              break;
+            case "cet":
+            case "cette":
+              asNumber = 7;
+              break;
+            case "neuf":
+              asNumber = 9;
+              break;
+            default:
+              break;
           }
         }
-        tokens.add(Number(asNumber));
-        continue;
-      }
+        if (asNumber == null) {
+          // Speech recognition sometimes inserts a comma, trying to make this a list.
 
-      print("Parser: Not a number");
+        }
 
-      var asSymbol;
-      // At this stage, we're going to assume that the word is not a number.
-      switch (word) {
-        // FIXME: Move this to an external dictionary.
-        case "virgule":
-        case ",":
-        case "point":
-        case ".":
-          asSymbol = Symbols.DOT;
-          break;
-        case "négatif":
-          asSymbol = Symbols.NEG;
-          break;
-        case "opposé":
-        case "opposée":
-          asSymbol = Symbols.OPP;
-          break;
-        // Separators
-        case "par":
-        case "égal":
-        case "=":
-        case "entrer":
-        case "entrée":
-        case "entrés":
-        case "entrées":
-        case "espace":
-        case "espaces":
-          break;
-        case "addition":
-        case "plus":
-        case "+":
-          asSymbol = Symbols.ADD;
-          break;
-        case "multiplication":
-        case "multiplié":
-        case "multiplier":
-        case "fois":
-        case "*":
-        case "x":
-          asSymbol = Symbols.MUL;
-          break;
-        case "soustraction":
-        case "moins":
-        case "-":
-          asSymbol = Symbols.SUB;
-          break;
-        case "division":
-        case "diviser":
-        case "divisé":
-        case "/":
-          asSymbol = Symbols.DIV;
-          break;
-        case "moyenne":
-          asSymbol = Symbols.AVG;
-          break;
-        case "supprime":
-        case "supprimer":
-          asSymbol = Symbols.DEL;
-          break;
-        case "zut":
-        case "annule":
-        case "annuler":
-          asSymbol = Symbols.CANCEL;
-          break;
-        default:
-          throw ('Mot inconnu "$word"');
+        // Attempt to fix numbers
+        if (asNumber != null) {
+          print("Parser: Found number $asNumber");
+          if (tokens.length > 1) {
+            var previous = tokens[tokens.length - 1];
+            if (previous is Symbol) {
+              // Recover "1 point 2" => 1.2
+              if (previous.value == Symbols.DOT) {
+                var beforeSeparator = tokens[tokens.length - 2];
+                print(
+                    "Parser: Attempting to merge $beforeSeparator and $asNumber");
+                if (beforeSeparator is Number) {
+                  var value =
+                      Number(double.parse('${beforeSeparator.value}$asNumber'));
+                  tokens.removeAt(tokens.length - 2);
+                  tokens.add(value);
+                  continue;
+                } else {
+                  throw ("$beforeSeparator n'est pas un nombre");
+                }
+              } else if (previous.value == Symbols.NEG) {
+                tokens.removeAt(tokens.length - 1);
+                tokens.add(Number(-asNumber));
+                continue;
+              }
+            }
+          }
+          tokens.add(Number(asNumber));
+          continue;
+        }
+
+        print("Parser: Not a number");
+
+        var asSymbol;
+        // At this stage, we're going to assume that the word is not a number.
+        switch (word) {
+          // FIXME: Move this to an external dictionary.
+          case "virgule":
+          case ",":
+          case "point":
+          case ".":
+            asSymbol = Symbols.DOT;
+            break;
+          case "négatif":
+            asSymbol = Symbols.NEG;
+            break;
+          case "opposé":
+          case "opposée":
+            asSymbol = Symbols.OPP;
+            break;
+          // Separators
+          case "par":
+          case "égal":
+          case "=":
+          case "entrer":
+          case "entrée":
+          case "entrés":
+          case "entrées":
+          case "espace":
+          case "espaces":
+            break;
+          case "addition":
+          case "plus":
+          case "+":
+            asSymbol = Symbols.ADD;
+            break;
+          case "multiplication":
+          case "multiplié":
+          case "multiplier":
+          case "fois":
+          case "*":
+          case "x":
+            asSymbol = Symbols.MUL;
+            break;
+          case "soustraction":
+          case "moins":
+          case "-":
+            asSymbol = Symbols.SUB;
+            break;
+          case "division":
+          case "diviser":
+          case "divisé":
+          case "/":
+            asSymbol = Symbols.DIV;
+            break;
+          case "moyenne":
+            asSymbol = Symbols.AVG;
+            break;
+          case "supprime":
+          case "supprimer":
+            asSymbol = Symbols.DEL;
+            break;
+          case "zut":
+          case "annule":
+          case "annuler":
+            asSymbol = Symbols.CANCEL;
+            break;
+          default:
+            throw ('Mot inconnu "$word"');
+        }
+        if (asSymbol != null) {
+          print("Parser: Found symbol $asSymbol");
+          tokens.add(Symbol(asSymbol));
+        } else {
+          print("Parser: skipping $word");
+        }
       }
-      if (asSymbol != null) {
-        print("Parser: Found symbol $asSymbol");
-        tokens.add(Symbol(asSymbol));
-      } else {
-        print("Parser: skipping $word");
-      }
-    }
-    print("Parser: tokenized $tokens");
-    return tokens;
+      print("Parser: tokenized $tokens");
+      return tokens;
+    });
   }
 
-  void handleWords(Iterable<String> words, {void Function(List<String>) onStatus}) {
+  void handleWords(Iterable<String> words,
+      {void Function(List<String>) onStatus}) async {
     if (onStatus == null) {
       onStatus = (_) {};
     }
     var tokens;
     try {
-      tokens = tokenize(words);
+      tokens = await tokenize(words);
     } catch (ex) {
       onStatus(["Je ne comprends pas: ", "$ex"]);
       throw ex;
@@ -325,8 +346,7 @@ class Parser {
     print("Parser: handling text $text");
     var regexp = RegExp(r"\S+");
     var matches = regexp.allMatches(text);
-    var words =
-        matches.map((match) => text.substring(match.start, match.end));
+    var words = matches.map((match) => text.substring(match.start, match.end));
     print("Words: $words");
     handleWords(words, onStatus: onStatus);
   }

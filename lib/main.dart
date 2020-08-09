@@ -91,23 +91,23 @@ class _StackPageState extends State<StackPage> {
             _isListening = false;
           });
           // FIXME: Handle alternative interpretations.
-          var regexp = RegExp(r"\S+");
-          var text = recognition.recognizedWords;
-          print("Recognized words: $text");
-          var matches = regexp.allMatches(text);
-          print("Matches: $matches");
-          var words =
-              matches.map((match) => text.substring(match.start, match.end));
-          print("Words: $words");
           setState(() {
-            _status = "$words";
+            print("Got ${recognition.recognizedWords}");
+            _status = "${recognition.recognizedWords}";
           });
-          parser.handleWords(words, onStatus: (status) {
-            print("Got status!");
-            setState(() {
-              _status = "$status";
+          try {
+            parser.handleText(recognition.recognizedWords, onStatus: (status) {
+              print("Got status!");
+              setState(() {
+                _status = "$status";
+              });
             });
-          });
+          } catch (ex) {
+            setState(() {
+              _status = "$ex";
+            });
+            throw ex;
+          }
         });
   }
 

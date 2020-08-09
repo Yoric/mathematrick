@@ -33,7 +33,19 @@ class Symbol extends Token {
   Symbol(this.value);
   @override
   String toString() {
-    return "$value";
+    switch (value) {
+      case Symbols.DOT: return ",";
+      case Symbols.MUL: return "*";
+      case Symbols.ADD: return "+";
+      case Symbols.SUB: return "-";
+      case Symbols.DIV: return "/";
+      case Symbols.AVG: return "moyenne";
+      case Symbols.NEG: return "négatif";
+      case Symbols.DEL: return "supprimer";
+      case Symbols.OPP: return "opposé";
+      case Symbols.CANCEL: return "annuler";
+    }
+    return "?";
   }
 }
 
@@ -57,7 +69,13 @@ class Parser {
   }
 
   void nary(double Function(List<dynamic> values) op) {
-    var arity = stack[0] as int;
+    // Check that we're dealing with a number.
+    var ceil = stack[0].ceil();
+    var floor = stack[0].floor();
+    if (ceil != floor) {
+      throw("${stack[0]} n'est pas un entier");
+    }
+    var arity = ceil;
     var values = [];
     for (var i = 1; i <= arity; ++i) {
       values.add(stack[i]);
@@ -79,6 +97,10 @@ class Parser {
 
       // Attempt to detect numbers.
       var asNumber = double.tryParse(word);
+      if (asNumber == null && word.contains(",")) {
+        print('Word "$word" could actually have an odd comma');
+        asNumber = double.tryParse(word.replaceFirst(",", "."));
+      }
       if (asNumber == null) {
         // Some numbers are unfortunately recognized as non-numbers, try and patch them here.
         switch (word) {
@@ -100,6 +122,10 @@ class Parser {
             break;
         }
       }
+      if (asNumber == null) {
+        // Speech recognition sometimes inserts a comma, trying to make this a list.
+
+      }
 
       // Attempt to fix numbers
       if (asNumber != null) {
@@ -119,7 +145,7 @@ class Parser {
                 tokens.add(value);
                 continue;
               } else {
-                throw ("Not a number: $beforeSeparator");
+                throw ("$beforeSeparator n'est pas un nombre");
               }
             } else if (previous.value == Symbols.NEG) {
               tokens.removeAt(tokens.length - 1);
@@ -195,7 +221,7 @@ class Parser {
           asSymbol = Symbols.CANCEL;
           break;
         default:
-          throw ('Unknown word $word');
+          throw ('Mot inconnu "$word"');
       }
       if (asSymbol != null) {
         print("Parser: Found symbol $asSymbol");
@@ -222,7 +248,7 @@ class Parser {
     {
       List<String> status = [];
       for (var token in tokens) {
-        status.add("$token");
+        status.add('"$token"');
       }
       print("Sending back status $status");
       onStatus(status);
@@ -277,56 +303,15 @@ class Parser {
         }
       }
     }
+  }
 
-/*
-        switch (asCommand) { // FIXME: Move this to an external dictionary.
-          // Fix numbers.
-          case "deux":
-          case "de":
-            stack.insert(0, 2);
-            break;
-          case "virgule":
-          case ",":
-          case "point":
-          case ".":
-            hasPendingComma = true;
-            break;
-          // Separators
-          case "égal":
-          case "=":
-          case "entrée":
-          case "entrés":
-          case "entrées":
-            break;
-          case "addition":
-          case "plus":
-          case "+":
-            binary((a, b) { return a + b; });
-            break;
-          case "multiplication":
-          case "multiplié":
-          case "multiplier":
-          case "fois":
-          case "*":
-            binary((a, b) { return a * b; });
-            break;
-          case "soustraction":
-          case "moins":
-          case "-":
-            binary((a, b) { return a - b; });
-            break;
-          case "division":
-          case "diviser":
-          case "divisé":
-          case "/":
-            binary((a, b) { return a / b; });
-            break;
-          case "moyenne":
-            nary((values) { return values.fold(0, (acc, element) => acc + element) / values.length; });
-            break;
-          default:
-            throw('Unknown word $asCommand');
-        }
-*/
+  void handleText(String text, {void Function(List<String>) onStatus}) {
+    print("Parser: handling text $text");
+    var regexp = RegExp(r"\S+");
+    var matches = regexp.allMatches(text);
+    var words =
+        matches.map((match) => text.substring(match.start, match.end));
+    print("Words: $words");
+    handleWords(words, onStatus: onStatus);
   }
 }

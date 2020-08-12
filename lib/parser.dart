@@ -23,12 +23,19 @@ enum Symbols {
   ADD,
   SUB,
   DIV,
-  AVG_AND_STDDEV,
-  NEG,
+  DUP,
   DEL,
 
-  // Opposite (operation)
+  // Average and standard deviation as a single operation.
+  AVG_AND_STDDEV,
+
+  // Prefix minus (e.g. "-1")
+  NEG,
+
+  // Opposite / suffix minus (e.g. "1 -" => "-1")
   OPP,
+
+  // Undo operationo
   CANCEL,
 }
 
@@ -54,6 +61,8 @@ class Symbol extends Token {
         return "négatif";
       case Symbols.DEL:
         return "supprimer";
+      case Symbols.DUP:
+        return "dupliquer";
       case Symbols.OPP:
         return "opposé";
       case Symbols.CANCEL:
@@ -267,15 +276,26 @@ class Parser {
           asSymbol = Symbols.DIV;
           break;
         case "moyenne":
-        case "écart-type":
           asSymbol = Symbols.AVG_AND_STDDEV;
           break;
         case "supprime":
         case "supprimer":
           asSymbol = Symbols.DEL;
           break;
+        case "dup":
+        case "dupe":
+        case "dupliquer":
+        case "dupliqué":
+        case "encore":
+        case "copier":
+        case "copié":
+        case "recopier":
+        case "recopié":
+          asSymbol = Symbols.DUP;
+          break;
         case "zut":
         case "annule":
+        case "annulé":
         case "annuler":
           asSymbol = Symbols.CANCEL;
           break;
@@ -351,6 +371,9 @@ class Parser {
               break;
             case Symbols.DEL:
               stack.removeAt(0);
+              break;
+            case Symbols.DUP:
+              stack.insert(0, stack[0]);
               break;
             case Symbols.AVG_AND_STDDEV:
               // Check that we're dealing with a number.

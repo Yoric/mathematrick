@@ -68,15 +68,11 @@ void main() {
   test('Cancel', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["2", "3", "4"]);
-    expect(
-        parser.stack,
-        equals([
-          Value(null, 4.0),
-          Value(null, 3.0),
-          Value(null, 2.0)
-        ]));
+    expect(parser.stack,
+        equals([Value(null, 4.0), Value(null, 3.0), Value(null, 2.0)]));
     parser.handleWords(["3", "moyenne"]);
-    expect(parser.stack, equals([Value("écart-type", 1.0), Value("moyenne", 3.0)]));
+    expect(parser.stack,
+        equals([Value("écart-type", 1.0), Value("moyenne", 3.0)]));
     parser.handleWords(["zut"]);
     expect(
         parser.stack,
@@ -85,6 +81,27 @@ void main() {
           Value(null, 3.0),
           Value(null, 2.0),
         ]));
+  });
+
+  test('Dup', () {
+    Parser parser = new Parser('en_US');
+    parser.handleWords(["2", "3", "4", "dup", "dup", "dup"]);
+    expect(
+        parser.stack,
+        equals([
+          Value(null, 4.0),
+          Value(null, 4.0),
+          Value(null, 4.0),
+          Value(null, 4.0),
+          Value(null, 3.0),
+          Value(null, 2.0)
+        ]));
+  });
+
+  test('Del', () {
+    Parser parser = new Parser('en_US');
+    parser.handleWords(["2", "3", "4", "supprimer"]);
+    expect(parser.stack, equals([Value(null, 3.0), Value(null, 2.0)]));
   });
 
   test('cet', () {

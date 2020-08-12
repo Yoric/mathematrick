@@ -1,7 +1,5 @@
 import 'package:intl/intl.dart';
 
-import 'package:mathematrick/localized.dart';
-
 class Token {
   String toString() {
     throw ("Not implemented");
@@ -63,9 +61,36 @@ class Symbol extends Token {
   }
 }
 
+class Value {
+  Value(this.name, this.value);
+  final String name;
+  final double value;
+
+  @override
+  String toString() {
+    if (this.name == null) {
+      return "$value";
+    } else {
+      return "($name) $value";
+    }
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is Value) {
+      return name == other.name && value == other.value;
+    } else {
+      return false;
+    }
+  }
+
+  @override
+  int get hashCode => name.hashCode ^ value.hashCode;
+}
+
 class Parser {
-  List<List<double>> backups = [];
-  List<double> stack = [];
+  List<List<Value>> backups = [];
+  List<Value> stack = [];
   final String _locale;
   NumberFormat _numberFormat;
 
@@ -75,37 +100,37 @@ class Parser {
 
   void flush() {}
 
-  void binary(double Function(double, double) op) {
+  void binary(double Function(double, double) op, String name) {
     var a = stack[1];
     var b = stack[0];
-    var result = op(a, b);
-    stack[1] = result;
+    var result = op(a.value, b.value);
+    stack[1] = Value(name, result);
     stack.removeAt(0);
     print("Binary: $a, $b => $result");
   }
 
-  void unary(double Function(double) op) {
-    var a = stack[0];
+  void unary(double Function(double) op, String name) {
+    var a = stack[0].value;
     var result = op(a);
-    stack[0] = result;
+    stack[0] = Value(name, result);
   }
 
-  void nary(double Function(List<dynamic> values) op) {
+  void nary(double Function(List<dynamic> values) op, String name) {
     // Check that we're dealing with a number.
-    var ceil = stack[0].ceil();
-    var floor = stack[0].floor();
+    var ceil = stack[0].value.ceil();
+    var floor = stack[0].value.floor();
     if (ceil != floor) {
       throw ("${stack[0]} n'est pas un entier");
     }
     var arity = ceil;
     var values = [];
     for (var i = 1; i <= arity; ++i) {
-      values.add(stack[i]);
+      values.add(stack[i].value);
     }
     assert(values.length == arity);
     print("nary collected $arity values: $values");
     var result = op(values);
-    stack[arity] = result;
+    stack[arity] = Value(name, result);
     stack.removeRange(0, arity);
   }
 
@@ -289,34 +314,34 @@ class Parser {
     try {
       for (var token in tokens) {
         if (token is Number) {
-          stack.insert(0, token.value);
+          stack.insert(0, Value(null, token.value));
           continue;
         } else if (token is Symbol) {
           switch (token.value) {
             case Symbols.ADD:
               binary((a, b) {
                 return a + b;
-              });
+              }, "+");
               break;
             case Symbols.MUL:
               binary((a, b) {
                 return a * b;
-              });
+              }, "*");
               break;
             case Symbols.DIV:
               binary((a, b) {
                 return a / b;
-              });
+              }, "/");
               break;
             case Symbols.SUB:
               binary((a, b) {
                 return a - b;
-              });
+              }, "-");
               break;
             case Symbols.OPP:
               unary((a) {
                 return -a;
-              });
+              }, "~");
               break;
             case Symbols.DEL:
               stack.removeAt(0);
@@ -325,7 +350,7 @@ class Parser {
               nary((values) {
                 return values.fold(0, (acc, element) => acc + element) /
                     values.length;
-              });
+              }, "moyenne");
               break;
             case Symbols.CANCEL:
               print("Canceling, here are my backups: $backups");

@@ -14,61 +14,89 @@ void main() {
   test('Push numbers', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["1", "2", "3.0", "4"]);
-    expect(parser.stack, equals([4.0, 3.0, 2.0, 1.0]));
+    expect(
+        parser.stack,
+        equals([
+          Value(null, 4.0),
+          Value(null, 3.0),
+          Value(null, 2.0),
+          Value(null, 1.0)
+        ]));
   });
-
 
   test('Addition', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["1", "2", "3.0", "4", "plus"]);
-    expect(parser.stack, equals([7.0, 2.0, 1.0]));
+    expect(parser.stack,
+        equals([Value("+", 7.0), Value(null, 2.0), Value(null, 1.0)]));
     parser.handleWords(["plus", "plus"]);
     expect(parser.stack.length, 1);
-    almost(parser.stack[0], 10.0, 0.001);
+    expect(parser.stack[0].name, equals("+"));
+    almost(parser.stack[0].value, 10.0, 0.001);
   });
 
   test('Subtraction', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["1", "2", "3.0", "4", "moins"]);
-    expect(parser.stack, equals([-1.0, 2.0, 1.0]));
+    expect(parser.stack,
+        equals([Value("-", -1.0), Value(null, 2.0), Value(null, 1.0)]));
     parser.handleWords(["moins", "moins"]);
     expect(parser.stack.length, 1);
-    almost(parser.stack[0], -2.0, 0.001);
+    expect(parser.stack[0].name, equals("-"));
+    almost(parser.stack[0].value, -2.0, 0.001);
   });
 
   test('Division', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["1", "2", "3.0", "4", "division"]);
-    expect(parser.stack, equals([3.0/4.0, 2.0, 1.0]));
+    expect(parser.stack,
+        equals([Value("/", 3.0 / 4.0), Value(null, 2.0), Value(null, 1.0)]));
   });
 
   test('Average', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["1", "2", "3.0", "4", "3", "moyenne"]);
-    expect(parser.stack, equals([(2.0 + 3.0 + 4.0) / 3.0, 1.0]));
+    expect(parser.stack,
+        equals([Value("moyenne", (2.0 + 3.0 + 4.0) / 3.0), Value(null, 1.0)]));
   });
 
   test('Cancel', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["1", "2", "3", "4", "5"]);
-    expect(parser.stack, equals([5.0, 4.0, 3.0, 2.0, 1.0]));
+    expect(
+        parser.stack,
+        equals([
+          Value(null, 5.0),
+          Value(null, 4.0),
+          Value(null, 3.0),
+          Value(null, 2.0),
+          Value(null, 1.0)
+        ]));
     parser.handleWords(["5", "moyenne"]);
-    expect(parser.stack, equals([3.0]));
+    expect(parser.stack, equals([Value("moyenne", 3.0)]));
     parser.handleWords(["zut"]);
-    expect(parser.stack, equals([5.0, 4.0, 3.0, 2.0, 1.0]));
+    expect(
+        parser.stack,
+        equals([
+          Value(null, 5.0),
+          Value(null, 4.0),
+          Value(null, 3.0),
+          Value(null, 2.0),
+          Value(null, 1.0)
+        ]));
   });
 
   test('cet', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["5", "espace", "cet", "espace", "moins"]);
     expect(parser.stack.length, 1);
-    almost(parser.stack[0], -2.0, 0.01);
+    expect(parser.stack[0].name, "-");
+    almost(parser.stack[0].value, -2.0, 0.01);
   });
-
 
   test('French comma notation', () {
     Parser parser = new Parser('fr_FR');
     parser.handleWords(["5,2"]);
-    expect(parser.stack, [5.2]);
+    expect(parser.stack, [Value(null, 5.2)]);
   });
 }

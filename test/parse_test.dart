@@ -56,33 +56,34 @@ void main() {
   test('Average', () {
     Parser parser = new Parser('en_US');
     parser.handleWords(["1", "2", "3.0", "4", "3", "moyenne"]);
-    expect(parser.stack,
-        equals([Value("moyenne", (2.0 + 3.0 + 4.0) / 3.0), Value(null, 1.0)]));
+    expect(
+        parser.stack,
+        equals([
+          Value("écart-type", 1.0),
+          Value("moyenne", (2.0 + 3.0 + 4.0) / 3.0),
+          Value(null, 1.0)
+        ]));
   });
 
   test('Cancel', () {
     Parser parser = new Parser('en_US');
-    parser.handleWords(["1", "2", "3", "4", "5"]);
+    parser.handleWords(["2", "3", "4"]);
     expect(
         parser.stack,
         equals([
-          Value(null, 5.0),
           Value(null, 4.0),
           Value(null, 3.0),
-          Value(null, 2.0),
-          Value(null, 1.0)
+          Value(null, 2.0)
         ]));
-    parser.handleWords(["5", "moyenne"]);
-    expect(parser.stack, equals([Value("moyenne", 3.0)]));
+    parser.handleWords(["3", "moyenne"]);
+    expect(parser.stack, equals([Value("écart-type", 1.0), Value("moyenne", 3.0)]));
     parser.handleWords(["zut"]);
     expect(
         parser.stack,
         equals([
-          Value(null, 5.0),
           Value(null, 4.0),
           Value(null, 3.0),
           Value(null, 2.0),
-          Value(null, 1.0)
         ]));
   });
 

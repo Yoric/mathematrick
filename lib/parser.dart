@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:intl/intl.dart';
 
 class Token {
@@ -21,7 +23,7 @@ enum Symbols {
   ADD,
   SUB,
   DIV,
-  AVG,
+  AVG_AND_STDDEV,
   NEG,
   DEL,
 
@@ -46,7 +48,7 @@ class Symbol extends Token {
         return "-";
       case Symbols.DIV:
         return "/";
-      case Symbols.AVG:
+      case Symbols.AVG_AND_STDDEV:
         return "moyenne";
       case Symbols.NEG:
         return "négatif";
@@ -56,6 +58,8 @@ class Symbol extends Token {
         return "opposé";
       case Symbols.CANCEL:
         return "annuler";
+      case Symbols.AVG_AND_STDDEV:
+        return "statistiques";
     }
     return "?";
   }
@@ -87,6 +91,7 @@ class Value {
   @override
   int get hashCode => name.hashCode ^ value.hashCode;
 }
+
 
 class Parser {
   List<List<Value>> backups = [];
@@ -262,7 +267,8 @@ class Parser {
           asSymbol = Symbols.DIV;
           break;
         case "moyenne":
-          asSymbol = Symbols.AVG;
+        case "écart-type":
+          asSymbol = Symbols.AVG_AND_STDDEV;
           break;
         case "supprime":
         case "supprimer":
@@ -346,11 +352,34 @@ class Parser {
             case Symbols.DEL:
               stack.removeAt(0);
               break;
-            case Symbols.AVG:
-              nary((values) {
-                return values.fold(0, (acc, element) => acc + element) /
-                    values.length;
-              }, "moyenne");
+            case Symbols.AVG_AND_STDDEV:
+              // Check that we're dealing with a number.
+              var ceil = stack[0].value.ceil();
+              var floor = stack[0].value.floor();
+              if (ceil != floor) {
+                throw ("${stack[0]} n'est pas un entier");
+              }
+              var arity = ceil;
+
+              // Compute average.
+              var average = 0.0;
+              for (var i = 1; i <= arity; ++i) {
+                average += stack[i].value;
+              }
+              average = average / arity;
+
+              // Compute stddev.
+              var stddev = 0.0;
+              for (var i = 1; i <= arity; ++i) {
+                var delta = (stack[i].value - average);
+                stddev += delta * delta;
+              }
+              stddev = sqrt(stddev / (arity - 1));
+
+              // Replace
+              stack.removeRange(0, arity + 1);
+              stack.insert(0, Value("moyenne", average));
+              stack.insert(0, Value("écart-type", stddev));
               break;
             case Symbols.CANCEL:
               print("Canceling, here are my backups: $backups");

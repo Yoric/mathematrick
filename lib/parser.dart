@@ -401,8 +401,8 @@ class Parser {
 
               // Replace
               stack.removeRange(0, arity + 1);
-              stack.insert(0, Value("moyenne", average));
-              stack.insert(0, Value("écart-type", stddev));
+              stack.insert(0, Value("moyenne de $arity", average));
+              stack.insert(0, Value("écart-type de $arity", stddev));
               break;
             case Symbols.CANCEL:
               print("Canceling, here are my backups: $backups");

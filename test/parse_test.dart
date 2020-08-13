@@ -59,6 +59,7 @@ void main() {
     expect(
         parser.stack,
         equals([
+          Value("médiane de 3", 3.0),
           Value("écart-type de 3", 1.0),
           Value("moyenne de 3", (2.0 + 3.0 + 4.0) / 3.0),
           Value(null, 1.0)
@@ -71,8 +72,13 @@ void main() {
     expect(parser.stack,
         equals([Value(null, 4.0), Value(null, 3.0), Value(null, 2.0)]));
     parser.handleWords(["3", "moyenne"]);
-    expect(parser.stack,
-        equals([Value("écart-type de 3", 1.0), Value("moyenne de 3", 3.0)]));
+    expect(
+        parser.stack,
+        equals([
+          Value("médiane de 3", 3.0),
+          Value("écart-type de 3", 1.0),
+          Value("moyenne de 3", 3.0),
+        ]));
     parser.handleWords(["zut"]);
     expect(
         parser.stack,

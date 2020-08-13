@@ -385,24 +385,47 @@ class Parser {
               var arity = ceil;
 
               // Compute average.
+              print("Computing average");
               var average = 0.0;
               for (var i = 1; i <= arity; ++i) {
                 average += stack[i].value;
               }
               average = average / arity;
+              print("Computing average: $average");
 
               // Compute stddev.
+              print("Computing stddev");
               var stddev = 0.0;
               for (var i = 1; i <= arity; ++i) {
                 var delta = (stack[i].value - average);
                 stddev += delta * delta;
               }
               stddev = sqrt(stddev / (arity - 1));
+              print("Computing stddev: $stddev");
+
+              // Compute median
+              print("Computing median");
+              var values = [];
+              for (var i = 1; i <= arity; ++i) {
+                values.add(stack[i].value);
+              }
+              values.sort();
+              var median;
+              if (arity % 2 == 0) {
+                var after = (arity / 2).floor();
+                var before = after - 1;
+                median = (values[before] + values[after]) / 2;
+              } else {
+                var index = ((arity - 1) / 2).floor();
+                median = values[index];
+              }
+              print("Computing median: $median");
 
               // Replace
               stack.removeRange(0, arity + 1);
               stack.insert(0, Value("moyenne de $arity", average));
               stack.insert(0, Value("écart-type de $arity", stddev));
+              stack.insert(0, Value("médiane de $arity", median));
               break;
             case Symbols.CANCEL:
               print("Canceling, here are my backups: $backups");
